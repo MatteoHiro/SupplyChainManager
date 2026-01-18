@@ -1,16 +1,8 @@
 # 🏭 Supply Chain Management System
-
-![.NET](https://img.shields.io/badge/.NET-6.0-512BD4?logo=dotnet)
-![Entity Framework](https://img.shields.io/badge/Entity%20Framework-6.0-512BD4)
-![SQL Server](https://img.shields.io/badge/SQL%20Server-LocalDB-CC2927?logo=microsoft-sql-server)
-![License](https://img.shields.io/badge/license-MIT-green)
-
-**Sistema professionale di gestione della supply chain** costruito con ASP.NET Core 6.0, Entity Framework Core e SQL Server. Questo progetto dimostra best practices nell'architettura a livelli, pattern repository, e API RESTful design.
-
 ## 🎯 Caratteristiche Principali
 
 ### Gestione Completa della Supply Chain
-- ✅ **Gestione Fornitori** - Anagrafica completa con rating e lead time
+- ✅ **Gestione Fornitori** - Anagrafica completa 
 - 📦 **Catalogo Prodotti** - SKU, prezzi, livelli di riordino
 - 🏪 **Multi-Warehouse** - Gestione di più magazzini con tracking delle location
 - 📊 **Inventory Management** - Stock tracking, riserve, disponibilità in tempo reale
@@ -244,53 +236,3 @@ Supplier (1) ──── (N) Product
 
 Product (1) ──── (N) InventoryItem (N) ──── (1) Warehouse
 ```
-
-### Caratteristiche del Modello
-- **Soft Delete** su entità principali (IsActive flag)
-- **Audit Trail** con CreatedAt e UpdatedAt
-- **Calculated Fields** (QuantityAvailable in InventoryItem)
-- **Unique Constraints** su SKU, OrderNumber, TrackingNumber
-- **Cascade Delete** configurato appropriatamente
-- **Index** su foreign keys e campi di ricerca frequente
-
-## 🎓 Concetti Dimostrati
-
-Questo progetto dimostra competenze in:
-
-1. **Clean Architecture** - Separazione in layers (Controllers, Services, Data)
-2. **SOLID Principles** - Dependency Injection, Interface Segregation
-3. **RESTful API Design** - HTTP verbs appropriati, status codes
-4. **Entity Framework Core** - Migrations, Relationships, Fluent API
-5. **Async/Await Pattern** - Operazioni asincrone throughout
-6. **Business Logic** - Gestione ordini, riserve stock, calcoli
-7. **Error Handling** - Validazione e gestione errori appropriata
-8. **API Documentation** - Swagger/OpenAPI integration
-9. **Data Seeding** - Dati di esempio per testing
-10. **Domain-Driven Design** - Entità ricche con business logic
-
-## 📝 Prossimi Sviluppi
-
-- [ ] Autenticazione e Autorizzazione (JWT)
-- [ ] Unit Tests e Integration Tests
-- [ ] Logging strutturato (Serilog)
-- [ ] Cache Layer (Redis)
-- [ ] Docker containerization
-- [ ] CI/CD Pipeline
-- [ ] Frontend Dashboard (React/Angular)
-- [ ] Real-time notifications (SignalR)
-- [ ] Export reports (PDF/Excel)
-- [ ] Multi-tenancy support
-
-## 👨‍💻 Autore
-
-Progetto sviluppato come portfolio per dimostrare competenze nello sviluppo di applicazioni enterprise.
-
-## 📄 Licenza
-
-Questo progetto è rilasciato sotto licenza MIT.
-
----
-
-⭐ **Realizzato per dimostrare competenze in sviluppo di gestionali enterprise con .NET**
-
-💼 **Ideale per colloqui nel settore supply chain e gestionali aziendali**
