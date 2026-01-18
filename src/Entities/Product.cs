@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MyDotNetEfApp.Entities
+namespace SupplyChainManager.Entities
 {
     public class Product
     {

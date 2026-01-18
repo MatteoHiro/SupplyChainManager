@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MyDotNetEfApp.Entities
+namespace SupplyChainManager.Entities
 {
     public enum ShipmentStatus
     {

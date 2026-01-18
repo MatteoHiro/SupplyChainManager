@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <RootNamespace>my_dotnet_ef_app</RootNamespace>
-    <AssemblyName>my-dotnet-ef-app</AssemblyName>
+    <RootNamespace>SupplyChainManager</RootNamespace>
+    <AssemblyName>SupplyChainManager</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

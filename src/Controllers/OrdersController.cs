@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using MyDotNetEfApp.Entities;
-using MyDotNetEfApp.Services;
+using SupplyChainManager.Entities;
+using SupplyChainManager.Services;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyDotNetEfApp.Controllers
+namespace SupplyChainManager.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

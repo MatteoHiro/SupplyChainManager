@@ -5,8 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using MyDotNetEfApp.Models;
-using MyDotNetEfApp.Services;
+using SupplyChainManager.Models;
+using SupplyChainManager.Services;
 
 public class Startup
 {
@@ -23,7 +23,7 @@ public class Startup
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(
                 Configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly("my-dotnet-ef-app")));
+                b => b.MigrationsAssembly("SupplyChainManager")));
 
         // Register services
         services.AddScoped<IInventoryService, InventoryService>();

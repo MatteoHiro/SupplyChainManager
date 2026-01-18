@@ -52,7 +52,7 @@ SupplyChainManager/
 │   └── Startup.cs
 │
 ├── appsettings.json
-└── my-dotnet-ef-app.csproj
+└── SupplyChainManager.csproj
 ```
 
 ## 🚀 Quick Start
@@ -80,7 +80,7 @@ Modifica `appsettings.json`:
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=SupplyChainDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=SupplyChainManager;Trusted_Connection=True;MultipleActiveResultSets=true"
   }
 }
 ```

@@ -1,8 +1,8 @@
-using MyDotNetEfApp.Entities;
+using SupplyChainManager.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MyDotNetEfApp.Services
+namespace SupplyChainManager.Services
 {
     public interface IInventoryService
     {

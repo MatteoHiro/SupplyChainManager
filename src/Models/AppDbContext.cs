@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using MyDotNetEfApp.Entities;
+using SupplyChainManager.Entities;
 using System;
 
-namespace MyDotNetEfApp.Models
+namespace SupplyChainManager.Models
 {
     public class AppDbContext : DbContext
     {

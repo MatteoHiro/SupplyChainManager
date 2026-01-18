@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using MyDotNetEfApp.Entities;
-using MyDotNetEfApp.Models;
+using SupplyChainManager.Entities;
+using SupplyChainManager.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MyDotNetEfApp.Services
+namespace SupplyChainManager.Services
 {
     public class OrderService : IOrderService
     {
