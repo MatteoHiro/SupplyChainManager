@@ -1,0 +1,57 @@
+# Top-level .gitignore for the repository (standard .NET/Visual Studio ignores)
+
+# Build results
+[Bb]in/
+[Oo]bj/
+artifacts/
+build/
+
+# Visual Studio and editor directories/files
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+
+# Test results and coverage
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+*.opencover.xml
+*.trx
+
+# Rider
+.idea/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Database files
+*.mdf
+*.ldf
+*.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Ignore test/build output everywhere
+**/bin/
+**/obj/
