@@ -1,0 +1,299 @@
+Cos'è un MCP (concetto)
+- Definizione: un MCP è un endpoint/server che espone funzionalità (capabilities) tramite un protocollo di integrazione (comunicazione su STDIO o HTTP) 
+    e che un host (editor/cliente) può avviare o contattare usando la configurazione in mcp.json.
+- Modalità: tipicamente stdio (avvia un processo locale e comunica via stdin/stdout) o http (server raggiungibile su rete).
+- Uso tipico: estendere l'editor con servizi (scanner di codice, deploy helper, API cloud) senza integrare logicamente il tool nell'IDE.
+
+Schema e campi principali 
+- servers: mappa ID → configurazione server.
+- type: tipo di connessione: stdio o http.
+- command / url: per stdio si indica il binario (command) e gli args; per http si indica la url del server.
+- args: array di argomenti passati al comando (possono includere placeholder come ${input:ID}).
+- env: variabili d'ambiente da impostare per il processo (anche qui si possono usare ${input:...}).
+- version / gallery: metadata per discovery/aggiornamento.
+- inputs: lista di input che il client può chiedere all'utente (es. token); usati come ${input:ID} nella sezione env o args.
+- placeholder substitution: ${input:XYZ} permette al host di chiedere XYZ all'utente; mantenere password: true per segreti.
+
+Esempio 1 — SonarQube via Docker (tipo stdio)
+- Scopo: avviare un container che espone un MCP che comunica su STDIO e riceve token via env.
+- Configurazione di esempio (esempio generico da inserire in mcp.json):
+
+{
+  "servers": {
+    "io.github.SonarSource/sonarqube-mcp-server": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "SONARQUBE_TOKEN",
+        "-e",
+        "SONARQUBE_URL",
+        "docker.io/mcp/sonarqube:latest"
+      ],
+      "env": {
+        "SONARQUBE_TOKEN": "${input:SONARQUBE_TOKEN}",
+        "SONARQUBE_URL": "${input:SONARQUBE_URL}"
+      },
+      "version": "latest"
+    }
+  },
+  "inputs": [
+    {
+      "id": "SONARQUBE_TOKEN",
+      "type": "promptString",
+      "description": "SonarQube user token",
+      "password": true
+    }
+  ]
+}
+
+- Avvio manuale (Linux/macOS shell):
+
+export SONARQUBE_TOKEN="s.XXXX"
+export SONARQUBE_URL="https://sonar.example.com"
+docker run -i --rm -e SONARQUBE_TOKEN="$SONARQUBE_TOKEN" -e SONARQUBE_URL="$SONARQUBE_URL" docker.io/mcp/sonarqube:latest
+
+- Avvio manuale (Windows PowerShell):
+
+$Env:SONARQUBE_TOKEN = 's.XXXX'
+$Env:SONARQUBE_URL = 'https://sonar.example.com'
+docker run -i --rm -e "SONARQUBE_TOKEN=$Env:SONARQUBE_TOKEN" -e "SONARQUBE_URL=$Env:SONARQUBE_URL" docker.io/mcp/sonarqube:latest
+
+- Avvio manuale (Windows CMD):
+
+set SONARQUBE_TOKEN=s.XXXX
+set SONARQUBE_URL=https://sonar.example.com
+docker run -i --rm -e SONARQUBE_TOKEN=%SONARQUBE_TOKEN% -e SONARQUBE_URL=%SONARQUBE_URL% docker.io/mcp/sonarqube:latest
+
+- Note: -i mantiene lo stdin aperto (necessario per STDIO); il container deve inoltrare stdin/stdout correttamente. L'host sostituisce ${input:...} richiedendo il token all'utente.
+
+Esempio 2 — Avvio di un server CLI locale (tipo stdio)
+- Scopo: avviare un tool installato localmente che apre un canale MCP su STDIO (es. un helper Azure/CLI).
+- Configurazione tipo:
+
+{
+  "servers": {
+    "com.microsoft/azure": {
+      "type": "stdio",
+      "command": "dnx",
+      "args": [
+        "Azure.Mcp@3.0.0-beta.6",
+        "--yes",
+        "--",
+        "server",
+        "start"
+      ],
+      "version": "3.0.0-beta.6"
+    }
+  }
+}
+
+- Avvio manuale (esempio):
+dnx Azure.Mcp@3.0.0-beta.6 --yes -- server start
+- Adattamento: su macchine moderne dnx può non esistere; sostituire con lo strumento equivalente (dotnet, azd, o un global tool) a seconda della toolchain. L'importante è che il processo parli il protocollo MCP su STDIO.
+
+Esempio 3 — Server remoto (tipo http)
+- Scopo: usare un servizio MCP esposto via HTTP (es. un cloud endpoint di Copilot/GitHub).
+- Configurazione tipo:
+
+{
+  "servers": {
+    "io.github.github/github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "version": "1.0.3"
+    }
+  }
+}
+
+- Utilizzo: il client farà richieste HTTP verso url; l'autenticazione e i header devono essere gestiti dal server o tramite input che il client passa come header (es. token). Il server HTTP deve esporre gli endpoint MCP previsti.
+
+Pattern d'uso operativi
+- Locale vs remoto: scegliere stdio per tool locali/container; scegliere http quando il servizio è centralizzato e sempre online.
+- Passaggio credenziali: evitare di salvare secret in chiaro; usare inputs con password: true o un secret store.
+- Fallback: puoi definire più server con nomi diversi (es. sonarqube-local, sonarqube-cloud) e lasciare che l'host scelga.
+- CI: in pipeline usare avvii non-interattivi e passare segreti tramite variabili d'ambiente della CI (e non committare nulla nel repo).
+
+Best practice e sicurezza
+- Non committare token in mcp.json. Usare password: true per gli inputs.
+- Limitare scope dei token (minori privilegi necessari).
+- Usare container effimeri: --rm e non esporre porte inutilmente.
+- Audit e logging: abilitare log lato server per capire handshake e messaggi; filtrare dati sensibili nei log.
+- Aggiornamenti: mantenere version per facilitare aggiornamenti e rollback.
+
+Debug e risoluzione problemi
+- Se stdio: assicurarsi che il processo sia effettivamente avviato e che stdin/stdout non siano catturati da shell wrapper; l'opzione -i di Docker è spesso necessaria.
+- Se http: verificare reachability (curl), certificati TLS e firewall/port.
+- Controllare variabili d'ambiente passate al processo e sostituzioni ${input:...}.
+- Abilitare argomenti --verbose/--log-level debug quando disponibili.
+- Per container: docker logs / docker run senza --rm per ispezionare l'output.
+
+Esempi avanzati / integrazioni
+- Comporre più server in mcp.json per toolchain (es. linter locale + scanner remoto).
+- Creare wrapper che mappano richieste MCP a comandi internazionali (es. convertire una richiesta "scan" in sonar-scanner con path di progetto montato da volume).
+- Uso in Docker Compose: definire servizio che espone il container e un entrypoint che mantiene lo STDIO collegato al client dell'IDE (più complesso da orchestrare ma possibile).
+
+
+1) Architettura e ciclo di vita (dettagli)
+- Avvio: il client (editor/host) avvia o contatta il server MCP. Per `stdio` il processo viene lanciato localmente; per `http` il client effettua chiamate REST/WebSocket.
+- Handshake / Initialize: subito dopo l'avvio il client invia una richiesta di inizializzazione (es. `initialize`) con informazioni sul workspace, percorso del progetto e configurazione. 
+    Il server risponde con `initialized` e con l'elenco delle capability (operazioni supportate).
+- Registrazione delle capability: il server comunica le API/metodi supportati (scan, lint, list-resources, deploy, ecc.).
+- Sessioni / Operazioni: il client richiede operazioni specifiche (es. `runScan`, `listIssues`) e può aprire sessioni che generano eventi di progresso.
+- Eventi / Notifiche: il server può inviare notifiche asimmetriche (es. `progress`, `log`, `diagnostic`) senza aspettare una richiesta diretta.
+- Chiusura: client e server gestiscono una procedura di shutdown pulita; per `stdio` è importante non chiudere prematuramente lo stdin.
+
+2) Framing e formati dei messaggi
+- NDJSON (newline-delimited JSON): semplice da implementare per prototype — ogni riga è un JSON valido. Limite: non gestisce contenuti multilinea senza escaping.
+- Header-style (LSP/Content-Length): produzione usa spesso l'header `Content-Length: <N>\r\n\r\n` seguito dal payload JSON. Questo evita ambiguità per payload contenenti nuove linee.
+- JSON-RPC 2.0: struttura comune per richiesta/risposta/notification. 
+Esempio richiesta:
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"runScan","params":{"path":"./src"}}
+```
+
+risposta:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"status":"accepted"}}
+```
+
+3) Sequenza tipica (semplificata)
+1. Client -> Server: `initialize` (workspace, config)
+2. Server -> Client: `initialized` + `capabilities`
+3. Client -> Server: `runScan` (params)
+4. Server -> Client: `notification: progress` (più volte)
+5. Server -> Client: `response` con risultato finale
+
+
+4) Gestione segreti e sicurezza (raccomandazioni)
+- Non committare mai segreti in `mcp.json`.
+- Usare i secret manager della piattaforma (GitHub Secrets, Azure Key Vault, AWS Secrets Manager).
+- Limitare scope e permessi dei token (principio del privilegio minimo).
+- Usare TLS e certificati validi per MCP HTTP.
+- Abilitare audit logging e monitoraggio realisticamente utili (non loggare i token).
+
+5) Checklist operativa prima di andare in produzione
+- Verificare che nessun segreto sia nel repository.
+- Testare il framing dei messaggi con payload multilinea.
+- Eseguire test di carico su endpoint HTTP se usato in produzione.
+- Automatizzare la rotazione dei token e la revoca in caso di incidente.
+
+**Casi d'uso specifici — Azure MCP**
+
+- Panoramica: un MCP per Azure espone operazioni di gestione e deployment (scoperta risorse, deploy di template/Bicep, esecuzione di comandi `az`/SDK, lettura sicura di segreti da Key Vault, trigger e controllo pipeline).
+- Capability tipiche:
+  - `azure.listSubscriptions`, `azure.listResourceGroups`, `azure.listResources`
+  - `azure.deployTemplate` / `azure.deployBicep`
+  - `azure.getSecret` (Key Vault)
+  - `azure.startPipeline`, `azure.getPipelineStatus` (Azure DevOps)
+  - `azure.startVM` / `azure.stopVM` / `azure.scaleApp`
+
+- Esempio `mcp.json` (concettuale):
+
+```json
+{
+  "servers": {
+    "com.microsoft/azure": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": ["Azure.Mcp.dll","server","start"],
+      "env": {
+        "AZURE_TENANT_ID": "${input:AZURE_TENANT_ID}",
+        "AZURE_CLIENT_ID": "${input:AZURE_CLIENT_ID}",
+        "AZURE_CLIENT_SECRET": "${input:AZURE_CLIENT_SECRET}"
+      },
+      "version": "3.0.0"
+    }
+  },
+  "inputs": [
+    { "id": "AZURE_CLIENT_SECRET", "type": "promptString", "password": true }
+  ]
+}
+```
+
+- Esempio di richiesta JSON-RPC (deploy):
+
+```json
+{"jsonrpc":"2.0","id":101,"method":"azure.deployTemplate","params":{"subscriptionId":"<sub>","resourceGroup":"rg-demo","templateUri":"https://.../template.json","parameters":{}}}
+```
+
+**Casi d'uso specifici — Git / GitHub MCP**
+
+- Panoramica: un MCP per Git/GitHub espone operazioni di repository management e automazione (creazione di branch/PR, commenti su PR, analisi codice, integrazione con scanner, rilascio automatizzato, gestione issue).
+- Capability tipiche:
+  - `git.listRepos`, `git.getBranches`, `git.createBranch`
+  - `git.createPullRequest`, `git.addReviewers`, `git.mergePullRequest`
+  - `git.postComment`, `git.listIssues`, `git.searchCode`
+
+- Esempio `mcp.json` (GitHub - HTTP):
+
+```json
+{
+  "servers": {
+    "io.github.github/github-mcp-server": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "env": { "GITHUB_TOKEN": "${input:GITHUB_TOKEN}" },
+      "version": "1.0.0"
+    }
+  },
+  "inputs": [
+    { "id": "GITHUB_TOKEN", "type": "promptString", "password": true }
+  ]
+}
+```
+
+- Esempio di richiesta JSON-RPC (creazione PR):
+
+```json
+{"jsonrpc":"2.0","id":201,"method":"git.createPullRequest","params":{"owner":"org","repo":"repo","head":"feature/xyz","base":"main","title":"Add feature","body":"Descrizione..."}}
+```
+
+- Use cases pratici:
+  - Bot di code-review che analizza diffs e pubblica commenti/suggerimenti.
+  - Automazioni che aprono PR per aggiornamenti di dipendenze, formattazione, o correzioni suggerite.
+  - Integrazione con scanner SCA/Static analysis e post dei risultati su PR.
+  - Creazione/richiesta di reviewer e assegnazione automatica in base al proprietario del codice.
+
+---
+
+Come usare gli MCP in GitHub Copilot
+
+Sostanzialmente basta avere il file .vscode/mcp.json configurato, ma con alcune precisazioni:
+
+Cosa serve (minimum viable setup)
+1. VS Code con l'estensione GitHub Copilot Chat installata e attiva.
+2. Il file .vscode/mcp.json nella cartella del workspace con la configurazione del server.
+3. Il runtime/tool richiesto dal server installato sulla macchina (es. Docker per SonarQube, dotnet per Azure MCP, nessun extra per GitHub MCP che è HTTP).
+
+Una volta che VS Code rileva mcp.json, avvia i server automaticamente quando apri una chat Copilot e i server diventano disponibili come strumenti che Copilot può invocare autonomamente durante le risposte.
+
+Cosa non è automatico
+- Per i server stdio con ${input:...}: VS Code ti chiederà i valori la prima volta (popup nell'editor). I valori vengono tenuti in sessione ma non salvati permanentemente.
+- Per il GitHub MCP (tipo http): il token di autenticazione è già gestito dalla sessione Copilot esistente — non serve configurarlo manualmente se usi l'endpoint https://api.githubcopilot.com/mcp/.
+- Per Azure MCP: devi avere az login già eseguito o fornire le credenziali Service Principal tramite le variabili env.
+
+Verifica rapida
+In VS Code, apri la Command Palette (Ctrl+Shift+P) e cerca:
+
+  MCP: List Servers
+  oppure
+  MCP: Start Server
+
+Se i server compaiono e lo stato è running, Copilot può usarli direttamente nella chat con @ o invocandoli implicitamente.
+
+Riassunto prerequisiti per server
+
+  Server         | Prerequisito extra
+  ---------------|-------------------------------------------------------
+  SonarQube      | Docker installato + token SonarQube
+  Azure MCP      | dotnet / dnx + az login o Service Principal
+  GitHub MCP     | Nessuno (usa la sessione Copilot attiva)
+
+---
+

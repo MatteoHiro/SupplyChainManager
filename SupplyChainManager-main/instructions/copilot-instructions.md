@@ -1,5 +1,11 @@
 # Istruzioni per GitHub Copilot
 
+## Policy MCP e Copilot (locale)
+- Tutte le configurazioni MCP e le istruzioni Copilot devono essere mantenute solo a livello locale del progetto (mai globali).
+- Il file mcp.json deve essere presente solo nella cartella .vscode del singolo progetto, non nella configurazione utente globale.
+- Le istruzioni e i file di personalizzazione Copilot (es: .instructions.md, .prompt.md, copilot-instructions.md) devono essere sempre salvati nella cartella del progetto.
+- Se trovi file globali relativi a MCP o Copilot, rimuovili e sposta tutto nel workspace locale previa tassativa richiesta al team.
+
 ## Scopo
 - Questo repository contiene un'app ASP.NET Core per la gestione della supply chain (inventario, ordini, fornitori, magazzini).
 - Fornisci suggerimenti coerenti con lo stile C# moderno e le convenzioni del progetto.
